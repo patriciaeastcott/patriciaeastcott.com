@@ -1,0 +1,17 @@
+CREATE DATABASE IF NOT EXISTS u400239072_taedb;
+USE u400239072_taedb;
+
+CREATE TABLE IF NOT EXISTS sessions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    start_time DATETIME,
+    end_time DATETIME,
+    data JSON
+);
+
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) UNIQUE,
+    password VARCHAR(255),
+    email VARCHAR(100)
+);
