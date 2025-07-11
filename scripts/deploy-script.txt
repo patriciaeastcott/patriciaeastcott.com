@@ -1,3 +1,3 @@
-open sftp://u400239072@156.67.73.21:65002 -hostkey="ssh-rsa 2048 your-host-key"
+open sftp://u400239072@156.67.73.21:65002 -hostkey="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHFR7QdWC2W1fqE2rRs4U/TkcriceFX5jPMNAsHAfUg/ trish_2146@hotmail.com"
 put build/* /home/u400239072/public_html/
 exit
