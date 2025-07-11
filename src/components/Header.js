@@ -6,11 +6,12 @@ function Header({ user, setUser }) {
 
   const handleLogout = () => {
     setUser(null);
+    localStorage.removeItem('token');
     history.push('/login');
   };
 
   return (
-    <header className="bg-indigo-600 text-white p-4">
+    <header className="bg-[#2C3E50] text-white p-4">
       <nav className="container flex justify-between items-center">
         <Link to="/" className="text-2xl font-bold">SkillStream Studio</Link>
         <div>
@@ -22,10 +23,10 @@ function Header({ user, setUser }) {
           {user ? (
             <>
               <Link to="/profile" className="mr-4">Profile</Link>
-              <button onClick={handleLogout} className="btn">Logout</button>
+              <button onClick={handleLogout} className="btn-primary">Logout</button>
             </>
           ) : (
-            <Link to="/login" className="btn">Login</Link>
+            <Link to="/login" className="btn-primary">Login</Link>
           )}
         </div>
       </nav>

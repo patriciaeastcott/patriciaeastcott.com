@@ -78,3 +78,52 @@ Notes
 Ensure MySQL remote access is enabled via Hostinger's control panel
 Use BrowserStack or LambdaTest for cross-browser testing
 Monitor performance using New Relic during beta testing
+SkillStream Studio - SmartCapture
+Overview
+SmartCapture by SkillStream Studio is a browser-based automation tool designed to capture user workflows, detect automation opportunities, and provide implementation guidance. This repository contains the frontend, backend, and database setup for the patriciaeastcott.com website.
+Setup Instructions
+
+Clone the Repository
+git clone <repository-url>
+cd patriciaeastcott.com
+
+Frontend Setup
+
+Install dependencies: npm install
+Build the frontend: npm run build
+Deploy to Hostinger: Use FileZilla or SCP to upload build/ to /home/u400239072/public_html
+
+Backend Setup
+
+Navigate to backend: cd backend
+Install dependencies: pip install -r requirements.txt
+Set up environment variables in .env
+Run the backend: python app.py
+
+Database Setup
+
+Connect to MySQL on srv1614.hstgr.io using Hostinger's remote access tool
+Execute db_setup.sql
+Update .env with DB credentials
+
+Deployment
+
+Use deploy.ps1 for Windows or manual SCP/FTP
+Access the site at https://patriciaeastcott.com
+
+Beta Testing Instructions
+
+Staging Environment
+
+Create a password-protected subdomain (e.g., beta.patriciaeastcott.com)
+Test SmartCapture, user registration, and report exports
+
+Feedback Collection
+
+Add Marker.io to index.html for bug reporting
+Use Google Forms for structured feedback
+
+Testing Process
+
+Register, login, record workflows, and export reports
+Monitor backend logs and MySQL data

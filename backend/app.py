@@ -10,6 +10,9 @@ from reportlab.pdfgen import canvas
 from utils.process_capture import capture_session
 from utils.automation_detection import detect_automation
 from utils.report_generator import generate_report
+import jwt
+import bcrypt
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 CORS(app)
@@ -22,9 +25,96 @@ db_config = {
     'database': os.getenv('DB_NAME')
 }
 
+def verify_token(token):
+    try:
+        return jwt.decode(token, os.getenv('JWT_SECRET'), algorithms=['HS256'])
+    except:
+        return None
+
+@app.route('/api/login', methods=['POST'])
+def login():
+    data = request.json
+    username = data.get('username')
+    password = data.get('password')
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
+    user = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    if user and bcrypt.checkpw(password.encode('utf-8'), user['password'].encode('utf-8')):
+        token = jwt.encode({'user_id': user['id'], 'exp': datetime.utcnow() + timedelta(hours=24)}, os.getenv('JWT_SECRET'))
+        return jsonify({'token': token})
+    return jsonify({'error': 'Invalid credentials'}), 401
+
+@app.route('/api/register', methods=['POST'])
+def register():
+    data = request.json
+    username = data.get('username')
+    password = data.get('password')
+    email = data.get('email')
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+    try:
+        cursor.execute("INSERT INTO users (username, password, email) VALUES (%s, %s, %s)", (username, hashed_password, email))
+        conn.commit()
+        return jsonify({'success': True})
+    except mysql.connector.Error as err:
+        return jsonify({'error': str(err)}), 400
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.route('/api/profile', methods=['GET', 'PUT'])
+def profile():
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    user_data = verify_token(token)
+    if not user_data:
+        return jsonify({'error': 'Invalid token'}), 401
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    if request.method == 'GET':
+        cursor.execute("SELECT username, email FROM users WHERE id = %s", (user_data['user_id'],))
+        user = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        return jsonify(user)
+    else:
+        data = request.json
+        cursor.execute("UPDATE users SET username = %s, email = %s WHERE id = %s", (data['username'], data['email'], user_data['user_id']))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({'success': True})
+
+@app.route('/api/sessions', methods=['GET'])
+def get_sessions():
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    user_data = verify_token(token)
+    if not user_data:
+        return jsonify({'error': 'Invalid token'}), 401
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT id, start_time, data FROM sessions WHERE user_id = %s", (user_data['user_id'],))
+    sessions = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return jsonify({'sessions': sessions})
+
 @app.route('/api/start_session', methods=['POST'])
 def start_session():
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    user_data = verify_token(token)
+    if not user_data:
+        return jsonify({'error': 'Invalid token'}), 401
     session_id = capture_session()
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO sessions (user_id, start_time, data) VALUES (%s, %s, %s)", (user_data['user_id'], datetime.utcnow(), json.dumps([])))
+    conn.commit()
+    cursor.close()
+    conn.close()
     return jsonify({'session_id': session_id})
 
 @app.route('/api/analyze', methods=['POST'])
@@ -37,7 +127,6 @@ def analyze():
 def upload_file():
     file = request.files['file']
     file.save(os.path.join('static/uploads', file.filename))
-    # Process file (e.g., parse .csv, .json, etc.)
     return jsonify({'status': 'File uploaded'})
 
 @app.route('/api/export/<format>', methods=['POST'])

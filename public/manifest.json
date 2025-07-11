@@ -1,0 +1,15 @@
+{
+  "name": "SkillStream Studio",
+  "short_name": "SmartCapture",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#2C3E50",
+  "theme_color": "#87CEEB",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ]
+}
